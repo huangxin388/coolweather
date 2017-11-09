@@ -85,10 +85,19 @@ public class ChooseAreaFragment extends Fragment{
                     queryCounties();
                 } else if(currentLevel == LEVEL_COUNTY) {
                     String weatherId = countyList.get(position).getWeatherId();
-                    Intent intent = new Intent(getActivity(),WeatherActivity.class);
-                    intent.putExtra("weather_id",weatherId);
-                    startActivity(intent);
-                    getActivity().finish();
+                    if(getActivity() instanceof MainActivity) {
+                        Intent intent = new Intent(getActivity(),WeatherActivity.class);
+                        intent.putExtra("weather_id",weatherId);
+                        startActivity(intent);
+                        getActivity().finish();
+                    } else if(getActivity() instanceof WeatherActivity) {
+                        WeatherActivity weatherActivity = (WeatherActivity) getActivity();
+                        weatherActivity.drawerLayout.closeDrawers();
+                        weatherActivity.swipeRefreshLayout.setRefreshing(true);
+                        weatherActivity.requestWeather(weatherId);
+                        getActivity().getIntent().putExtra("weather_id",weatherId);
+                    }
+
                 }
             }
         });
@@ -153,13 +162,10 @@ public class ChooseAreaFragment extends Fragment{
                 boolean result = false;
                 if("province".equals(type)) {
                     result = Utility.handleProvinceResponse(responseText);
-                    Log.d("xyz","province result = " + result);
                 } else if("city".equals(type)) {
                     result = Utility.handleCityResponse(responseText,selectedProvince.getId());
-                    Log.d("xyz","city result = " + result);
                 } else if("county".equals(type)){
                     result = Utility.handleCountyResponse(responseText,selectedCity.getId());
-                    Log.d("xyz","county result = " + result);
                 }
 
                 if(result) {
