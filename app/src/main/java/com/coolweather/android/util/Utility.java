@@ -1,10 +1,13 @@
 package com.coolweather.android.util;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.coolweather.android.db.City;
 import com.coolweather.android.db.County;
 import com.coolweather.android.db.Province;
+import com.coolweather.android.gson.Weather;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
@@ -21,18 +24,21 @@ public class Utility {
      * 解析和处理服务器返回的省级数据
      */
     public static boolean handleProvinceResponse(String response) {
-        try {
-            JSONArray allProvinces = new JSONArray(response);
-            for(int i  = 0;i < response.length();i++) {
-                JSONObject provinceObject = allProvinces.getJSONObject(i);
-                Province province = new Province();
-                province.setProvinceName(provinceObject.getString("name"));
-                province.setProvinceCode(provinceObject.getInt("id"));
-                province.save();
+        if(!TextUtils.isEmpty(response)) {
+            Log.d("xyz","response不是空");
+            try {
+                JSONArray allProvinces = new JSONArray(response);
+                for(int i  = 0;i < allProvinces.length();i++) {
+                    JSONObject provinceObject = allProvinces.getJSONObject(i);
+                    Province province = new Province();
+                    province.setProvinceName(provinceObject.getString("name"));
+                    province.setProvinceCode(provinceObject.getInt("id"));
+                    province.save();
+                }
+                return true;
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-            return true;
-        } catch (JSONException e) {
-            e.printStackTrace();
         }
         return false;
     }
@@ -71,7 +77,7 @@ public class Utility {
                     County county = new County();
                     county.setCityId(cityId);
                     county.setCountyName(countyObject.getString("name"));
-                    county.setWeatherId("weather_id");
+                    county.setWeatherId(countyObject.getString("weather_id"));
                     county.save();
                 }
                 return true;
@@ -80,6 +86,18 @@ public class Utility {
             }
         }
         return false;
+    }
+
+    public static Weather handleWeatherResponse(String response) {
+        try {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent,Weather.class);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }
 
